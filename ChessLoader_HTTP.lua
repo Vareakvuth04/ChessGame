@@ -208,6 +208,26 @@ local Game = {
 }
 
 --===========================================================
+-- MATCH SETTINGS (changed via UI buttons)
+--===========================================================
+local MatchSettings = {
+	TimeMode = "Classic", -- "Classic" (10min) or "Bullet" (1min)
+	AI_Difficulty = "Challenging", -- "Classic", "Challenging", "Monster"
+}
+
+local AI_Depths = { Classic = 1, Challenging = 2, Monster = 3 }
+local NextDifficulty = { Classic = "Challenging", Challenging = "Monster", Monster = "Classic" }
+local NextTimeMode = { Classic = "Bullet", Bullet = "Classic" }
+
+function MatchSettings.GetTime()
+	return MatchSettings.TimeMode == "Bullet" and 60 or 600
+end
+
+function MatchSettings.GetDepth()
+	return AI_Depths[MatchSettings.AI_Difficulty] or 2
+end
+
+--===========================================================
 -- BOARD GENERATOR
 --===========================================================
 local ts,ph=6,3
@@ -388,13 +408,28 @@ end)
 --===========================================================
 -- BUTTONS
 --===========================================================
-mkBtn(UDim2.new(0.5,-100,0,100),"Play vs AI",Color3.fromRGB(40,80,40),function()
-	Game.Board=ChessLogic.NewBoard();Game.Turn="White";Game.GameOver=false;Game.Winner=nil;Game.GameState="Normal";Game.SelectedPos=nil;Game.CastlingRights="KQkq";Game.EnPassantTarget=nil;Game.MoveHistory={};Game.WhiteTime=600;Game.BlackTime=600;Game.TimerRunning=false;Game.Mode="ai";AI.TT={}
+local function StartGame(mode)
+	local time = MatchSettings.GetTime()
+	AI.Depth = MatchSettings.GetDepth()
+	Game.Board=ChessLogic.NewBoard();Game.Turn="White";Game.GameOver=false;Game.Winner=nil;Game.GameState="Normal";Game.SelectedPos=nil;Game.CastlingRights="KQkq";Game.EnPassantTarget=nil;Game.MoveHistory={};Game.WhiteTime=time;Game.BlackTime=time;Game.TimerRunning=false;Game.Mode=mode;AI.TT={}
 	clr();SyncPieces();Game:UpdateUI();Game:StartTimer()
+end
+
+local timeBtn = mkBtn(UDim2.new(0.5,-100,0,100), "Time: Classic", Color3.fromRGB(60,60,80), function()
+	MatchSettings.TimeMode = NextTimeMode[MatchSettings.TimeMode]
+	timeBtn.Text = "Time: " .. MatchSettings.TimeMode
 end)
-mkBtn(UDim2.new(0.5,-100,0,170),"2-Player Hotseat",Color3.fromRGB(40,40,80),function()
-	Game.Board=ChessLogic.NewBoard();Game.Turn="White";Game.GameOver=false;Game.Winner=nil;Game.GameState="Normal";Game.SelectedPos=nil;Game.CastlingRights="KQkq";Game.EnPassantTarget=nil;Game.MoveHistory={};Game.WhiteTime=600;Game.BlackTime=600;Game.TimerRunning=false;Game.Mode="2p";AI.TT={}
-	clr();SyncPieces();Game:UpdateUI();Game:StartTimer()
+
+local diffBtn = mkBtn(UDim2.new(0.5,-100,0,170), "AI: Challenging", Color3.fromRGB(80,60,40), function()
+	MatchSettings.AI_Difficulty = NextDifficulty[MatchSettings.AI_Difficulty]
+	diffBtn.Text = "AI: " .. MatchSettings.AI_Difficulty
+end)
+
+mkBtn(UDim2.new(0.5,-100,0,240),"Play vs AI",Color3.fromRGB(40,80,40),function()
+	StartGame("ai")
+end)
+mkBtn(UDim2.new(0.5,-100,0,310),"2-Player Hotseat",Color3.fromRGB(40,40,80),function()
+	StartGame("2p")
 end)
 mkBtn(UDim2.new(0,20,0,200),"Teleport to Board",Color3.fromRGB(40,80,120),function()
 	local origin=GetOrigin();local char=Player.Character
@@ -404,7 +439,8 @@ mkBtn(UDim2.new(0,20,0,200),"Teleport to Board",Color3.fromRGB(40,80,120),functi
 	end
 end)
 mkBtn(UDim2.new(0,20,0,140),"Reset",Color3.fromRGB(120,40,40),function()
-	Game.Board=ChessLogic.NewBoard();Game.Turn="White";Game.GameOver=false;Game.Winner=nil;Game.GameState="Normal";Game.SelectedPos=nil;Game.CastlingRights="KQkq";Game.EnPassantTarget=nil;Game.MoveHistory={};Game.WhiteTime=600;Game.BlackTime=600;Game.TimerRunning=false;AI.TT={}
+	local time = MatchSettings.GetTime()
+	Game.Board=ChessLogic.NewBoard();Game.Turn="White";Game.GameOver=false;Game.Winner=nil;Game.GameState="Normal";Game.SelectedPos=nil;Game.CastlingRights="KQkq";Game.EnPassantTarget=nil;Game.MoveHistory={};Game.WhiteTime=time;Game.BlackTime=time;Game.TimerRunning=false;AI.TT={}
 	clr();SyncPieces();Game:UpdateUI()
 end)
 
@@ -417,6 +453,8 @@ SyncPieces()
 Game:UpdateUI()
 
 print("=== CHESS GAME LOADED ===")
+print("Click 'Time' to toggle Classic (10min) / Bullet (1min)")
+print("Click 'AI' to cycle difficulty: Classic / Challenging / Monster")
 print("Click 'Play vs AI' or '2-Player Hotseat' to start")
 print("Click tiles to select and move pieces")
 print("Use 'Teleport to Board' if you can't see the board")
