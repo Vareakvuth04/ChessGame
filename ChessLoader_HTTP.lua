@@ -10,7 +10,7 @@ local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 local Player = Players.LocalPlayer
 
-print("Chess loader: waiting for PlayerGui...")
+print("Chess loader v2: waiting for PlayerGui...")
 local PlayerGui = Player:WaitForChild("PlayerGui", 30)
 if not PlayerGui then print("ERROR: No PlayerGui found"); return end
 print("Chess loader: PlayerGui ready")

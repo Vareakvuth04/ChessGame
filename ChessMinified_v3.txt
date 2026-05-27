@@ -1,0 +1,177 @@
+local P=game:GetService("Players")
+local U=game:GetService("UserInputService")
+local W=game:GetService("Workspace")
+local L=P.LocalPlayer
+local G=L:WaitForChild("PlayerGui",30)
+if not G then return end
+local D={}
+D.V={wP=100,wN=320,wB=330,wR=500,wQ=900,wK=20000,bP=100,bN=320,bB=330,bR=500,bQ=900,bK=20000}
+D.S={wP="P",wN="N",wB="B",wR="R",wQ="Q",wK="K",bP="p",bN="n",bB="b",bR="r",bQ="q",bK="k"}
+D.C={wP=Color3.fromRGB(240,240,240),wN=Color3.fromRGB(240,240,240),wB=Color3.fromRGB(240,240,240),wR=Color3.fromRGB(240,240,240),wQ=Color3.fromRGB(240,240,240),wK=Color3.fromRGB(240,240,240),bP=Color3.fromRGB(40,40,40),bN=Color3.fromRGB(40,40,40),bB=Color3.fromRGB(40,40,40),bR=Color3.fromRGB(40,40,40),bQ=Color3.fromRGB(40,40,40),bK=Color3.fromRGB(40,40,40)}
+function D.G(p)return p and(p:sub(1,1)=="w"and"W"or"B")or nil end
+function D.I(p,c)return p and((c=="W"and p:sub(1,1)=="w")or(c=="B"and p:sub(1,1)=="b"))end
+local C={}
+function C.N()local b={}for x=1,8 do b[x]={}end;local r={"R","N","B","Q","K","B","N","R"}for x=1,8 do b[x][1]="w"..r[x];b[x][2]="wP";b[x][7]="bP";b[x][8]="b"..r[x]end;return b end
+function C.CB(b)local c={}for x=1,8 do c[x]={}for y=1,8 do c[x][y]=b[x][y]end end;return c end
+function C.IB(x,y)return x>=1 and x<=8 and y>=1 and y<=8 end
+function C.PM(b,fx,fy,tx,ty,c,ep)
+local d=c=="W"and 1 or-1;local s=c=="W"and 2 or 7
+if tx==fx and ty==fy+d and not b[tx][ty]then return true end
+if tx==fx and ty==fy+2*d and fy==s then local m=fy+d;if not b[tx][ty]and not b[tx][m]then return true end end
+if math.abs(tx-fx)==1 and ty==fy+d then
+if b[tx][ty]and D.I(b[tx][ty],c=="W"and"B"or"W")then return true end
+if ep and tx==ep.x and ty==ep.y then return true end end;return false end
+function C.KM(b,fx,fy,tx,ty,c)local dx,dy=math.abs(tx-fx),math.abs(ty-fy)
+if not((dx==2 and dy==1)or(dx==1 and dy==2))then return false end
+local t=b[tx][ty]if t and D.I(t,c)then return false end;return true end
+function C.BM(b,fx,fy,tx,ty,c)
+if math.abs(tx-fx)~=math.abs(ty-fy)then return false end
+local sx,sy=tx>fx and 1 or-1,ty>fy and 1 or-1;local x,y=fx+sx,fy+sy
+while x~=tx or y~=ty do if b[x][y]then return false end;x=x+sx;y=y+sy end
+local t=b[tx][ty]if t and D.I(t,c)then return false end;return true end
+function C.RM(b,fx,fy,tx,ty,c)
+if fx~=tx and fy~=ty then return false end
+if fx==tx then local sy=ty>fy and 1 or-1;local y=fy+sy
+while y~=ty do if b[fx][y]then return false end;y=y+sy end
+else local sx=tx>fx and 1 or-1;local x=fx+sx
+while x~=tx do if b[x][fy]then return false end;x=x+sx end end
+local t=b[tx][ty]if t and D.I(t,c)then return false end;return true end
+function C.QM(b,fx,fy,tx,ty,c)return C.BM(b,fx,fy,tx,ty,c)or C.RM(b,fx,fy,tx,ty,c)end
+function C.KiM(b,fx,fy,tx,ty,c)
+local dx,dy=math.abs(tx-fx),math.abs(ty-fy)
+if dx<=1 and dy<=1 and dx+dy>0 then local t=b[tx][ty]if t and D.I(t,c)then return false end;return true end
+if dx==2 and dy==0 then local row=fy;local e=c=="W"and"B"or"W"
+if tx==7 then
+if b[8][row]==(c=="W"and"wR"or"bR")and not b[6][row]and not b[7][row]and not C.SA(b,fx,fy,e)and not C.SA(b,fx+1,fy,e)and not C.SA(b,fx+2,fy,e)then return true,"k"end
+elseif tx==3 then
+if b[1][row]==(c=="W"and"wR"or"bR")and not b[2][row]and not b[3][row]and not b[4][row]and not C.SA(b,fx,fy,e)and not C.SA(b,fx-1,fy,e)and not C.SA(b,fx-2,fy,e)then return true,"q"end end end;return false end
+function C.VM(b,fx,fy,tx,ty,c,ep)
+if not C.IB(fx,fy)or not C.IB(tx,ty)then return false end
+local p=b[fx][fy]if not p or not D.I(p,c)then return false end
+local pt=p:sub(2,2);local v,ex=nil,nil
+if pt=="P"then v=C.PM(b,fx,fy,tx,ty,c,ep)elseif pt=="N"then v=C.KM(b,fx,fy,tx,ty,c)
+elseif pt=="B"then v=C.BM(b,fx,fy,tx,ty,c)elseif pt=="R"then v=C.RM(b,fx,fy,tx,ty,c)
+elseif pt=="Q"then v=C.QM(b,fx,fy,tx,ty,c)elseif pt=="K"then local s,e=C.KiM(b,fx,fy,tx,ty,c);v=s;ex=e end
+if not v then return false end;local t=C.CB(b);t[tx][ty]=t[fx][fy];t[fx][fy]=nil
+if ex=="k"then t[tx-1][ty]=t[tx+1][ty];t[tx+1][ty]=nil elseif ex=="q"then t[tx+1][ty]=t[tx-2][ty];t[tx-2][ty]=nil end
+if C.ICk(t,c)then return false end;return true,ex end
+function C.FK(b,c)local k=c=="W"and"wK"or"bK"for x=1,8 do for y=1,8 do if b[x][y]==k then return x,y end end end;return nil,nil end
+function C.SA(b,tx,ty,by)
+for x=1,8 do for y=1,8 do local p=b[x][y]if p and D.I(p,by)then
+local pt=p:sub(2,2)
+if pt=="P"then local d=by=="W"and 1 or-1;if math.abs(tx-x)==1 and ty==y+d then return true end
+elseif pt=="N"then local dx,dy=math.abs(tx-x),math.abs(ty-y)if(dx==2 and dy==1)or(dx==1 and dy==2)then return true end
+elseif pt=="B"then if math.abs(tx-x)==math.abs(ty-y)and tx~=x then
+local sx,sy=tx>x and 1 or-1,ty>y and 1 or-1;local cx,cy=x+sx,y+sy;local bl=false
+while cx~=tx or cy~=ty do if b[cx][cy]then bl=true;break end;cx=cx+sx;cy=cy+sy end
+if not bl then return true end end
+elseif pt=="R"then if x==tx or y==ty then
+if x==tx and y~=ty then local s=ty>y and 1 or-1;local cy=y+s;local bl=false
+while cy~=ty do if b[x][cy]then bl=true;break end;cy=cy+s end;if not bl then return true end
+elseif y==ty then local s=tx>x and 1 or-1;local cx=x+s;local bl=false
+while cx~=tx do if b[cx][y]then bl=true;break end;cx=cx+s end;if not bl then return true end end end
+elseif pt=="Q"then
+if math.abs(tx-x)==math.abs(ty-y)or tx==x or ty==y then
+if math.abs(tx-x)==math.abs(ty-y)then
+local sx,sy=tx>x and 1 or-1,ty>y and 1 or-1;local cx,cy=x+sx,y+sy;local bl=false
+while cx~=tx or cy~=ty do if b[cx][cy]then bl=true;break end;cx=cx+sx;cy=cy+sy end
+if not bl then return true end
+elseif x==tx then local s=ty>y and 1 or-1;local cy=y+s;local bl=false
+while cy~=ty do if b[x][cy]then bl=true;break end;cy=cy+s end;if not bl then return true end
+elseif y==ty then local s=tx>x and 1 or-1;local cx=x+s;local bl=false
+while cx~=tx do if b[cx][y]then bl=true;break end;cx=cx+s end;if not bl then return true end end end
+elseif pt=="K"then local dx,dy=math.abs(tx-x),math.abs(ty-y)if dx<=1 and dy<=1 and dx+dy>0 then return true end
+end end end end;return false end
+function C.ICk(b,c)local kx,ky=C.FK(b,c)if not kx then return false end;local e=c=="W"and"B"or"W";return C.SA(b,kx,ky,e)end
+function C.HLM(b,c)for x=1,8 do for y=1,8 do local p=b[x][y]if p and D.I(p,c)then for tx=1,8 do for ty=1,8 do if x~=tx or y~=ty then local s=C.VM(b,x,y,tx,ty,c)if s then return true end end end end end end;return false end
+function C.GGS(b,t)local e=t=="W"and"B"or"W";local ch=C.ICk(b,t);local mv=C.HLM(b,t)if ch and not mv then return"CM",e end;if not ch and not mv then return"SM",nil end;if ch then return"CK",nil end;return"NM",nil end
+function C.GM(b,c)local m={}for x=1,8 do for y=1,8 do local p=b[x][y]if p and D.I(p,c)then for tx=1,8 do for ty=1,8 do if x~=tx or y~=ty then local s=C.VM(b,x,y,tx,ty,c)if s then table.insert(m,{fx=x,fy=y,tx=tx,ty=ty})end end end end end end;return m end
+function C.AM(b,fx,fy,tx,ty,pr)local nb=C.CB(b);local p=nb[fx][fy];nb[tx][ty]=p;nb[fx][fy]=nil
+if p:sub(2,2)=="P"and(ty==1 or ty==8)then local co=D.G(p);nb[tx][ty]=(co=="W"and"w"or"b")..(pr or"Q")end
+if p:sub(2,2)=="K"and math.abs(tx-fx)==2 then if tx==7 then nb[6][ty]=nb[8][ty];nb[8][ty]=nil elseif tx==3 then nb[4][ty]=nb[1][ty];nb[1][ty]=nil end end;return nb end
+local A={Depth=2,TT={}}local k={}
+k.wP={{0,0,0,0,0,0,0,0},{50,50,50,50,50,50,50,50},{10,10,20,30,30,20,10,10},{5,5,10,25,25,10,5,5},{0,0,0,20,20,0,0,0},{5,-5,-10,0,0,-10,-5,5},{5,10,10,-20,-20,10,10,5},{0,0,0,0,0,0,0,0}}
+k.bP={{0,0,0,0,0,0,0,0},{5,10,10,-20,-20,10,10,5},{5,-5,-10,0,0,-10,-5,5},{0,0,0,20,20,0,0,0},{5,5,10,25,25,10,5,5},{10,10,20,30,30,20,10,10},{50,50,50,50,50,50,50,50},{0,0,0,0,0,0,0,0}}
+k.wN={{-50,-40,-30,-30,-30,-30,-40,-50},{-40,-20,0,0,0,0,-20,-40},{-30,0,10,15,15,10,0,-30},{-30,5,15,20,20,15,5,-30},{-30,0,15,20,20,15,0,-30},{-30,5,10,15,15,10,5,-30},{-40,-20,0,5,5,0,-20,-40},{-50,-40,-30,-30,-30,-30,-40,-50}}
+k.bN={{-50,-40,-30,-30,-30,-30,-40,-50},{-40,-20,0,5,5,0,-20,-40},{-30,5,10,15,15,10,5,-30},{-30,0,15,20,20,15,0,-30},{-30,5,15,20,20,15,5,-30},{-30,0,10,15,15,10,0,-30},{-40,-20,0,0,0,0,-20,-40},{-50,-40,-30,-30,-30,-30,-40,-50}}
+k.wB={{-20,-10,-10,-10,-10,-10,-10,-20},{-10,0,0,0,0,0,0,-10},{-10,0,5,10,10,5,0,-10},{-10,5,5,10,10,5,5,-10},{-10,0,10,10,10,10,0,-10},{-10,10,10,10,10,10,10,-10},{-10,5,0,0,0,0,5,-10},{-20,-10,-10,-10,-10,-10,-10,-20}}
+k.bB={{-20,-10,-10,-10,-10,-10,-10,-20},{-10,5,0,0,0,0,5,-10},{-10,10,10,10,10,10,10,-10},{-10,0,10,10,10,10,0,-10},{-10,5,5,10,10,5,5,-10},{-10,0,5,10,10,5,0,-10},{-10,0,0,0,0,0,0,-10},{-20,-10,-10,-10,-10,-10,-10,-20}}
+k.wR={{0,0,0,0,0,0,0,0},{5,10,10,10,10,10,10,5},{-5,0,0,0,0,0,0,-5},{-5,0,0,0,0,0,0,-5},{-5,0,0,0,0,0,0,-5},{-5,0,0,0,0,0,0,-5},{-5,0,0,0,0,0,0,-5},{0,0,0,5,5,0,0,0}}
+k.bR={{0,0,0,5,5,0,0,0},{-5,0,0,0,0,0,0,-5},{-5,0,0,0,0,0,0,-5},{-5,0,0,0,0,0,0,-5},{-5,0,0,0,0,0,0,-5},{-5,0,0,0,0,0,0,-5},{5,10,10,10,10,10,10,5},{0,0,0,0,0,0,0,0}}
+k.wQ={{-20,-10,-10,-5,-5,-10,-10,-20},{-10,0,0,0,0,0,0,-10},{-10,0,5,5,5,5,0,-10},{-5,0,5,5,5,5,0,-5},{0,0,5,5,5,5,0,-5},{-10,5,5,5,5,5,0,-10},{-10,0,5,0,0,0,0,-10},{-20,-10,-10,-5,-5,-10,-10,-20}}
+k.bQ={{-20,-10,-10,-5,-5,-10,-10,-20},{-10,0,5,0,0,0,0,-10},{-10,5,5,5,5,5,0,-10},{0,0,5,5,5,5,0,-5},{-5,0,5,5,5,5,0,-5},{-10,0,5,5,5,5,0,-10},{-10,0,0,0,0,0,0,-10},{-20,-10,-10,-5,-5,-10,-10,-20}}
+k.wK={{-30,-40,-40,-50,-50,-40,-40,-30},{-30,-40,-40,-50,-50,-40,-40,-30},{-30,-40,-40,-50,-50,-40,-40,-30},{-30,-40,-40,-50,-50,-40,-40,-30},{-20,-30,-30,-40,-40,-30,-30,-20},{-10,-20,-20,-20,-20,-20,-20,-10},{20,20,0,0,0,0,20,20},{20,30,10,0,0,10,30,20}}
+k.bK={{20,30,10,0,0,10,30,20},{20,20,0,0,0,0,20,20},{-10,-20,-20,-20,-20,-20,-20,-10},{-20,-30,-30,-40,-40,-30,-30,-20},{-30,-40,-40,-50,-50,-40,-40,-30},{-30,-40,-40,-50,-50,-40,-40,-30},{-30,-40,-40,-50,-50,-40,-40,-30},{-30,-40,-40,-50,-50,-40,-40,-30}}
+function A.E(b)local s=0 for x=1,8 do for y=1,8 do local p=b[x][y]if p then local v=D.V[p]or 0 local t=k[p]if t then v=v+t[y][x]end;s=s+(p:sub(1,1)=="w"and v or -v)end end end;return s end
+local function od(b,m)local sc={}for i,mv in ipairs(m)do local v=0;local t=b[mv.tx][mv.ty]if t then v=v+(D.V[t]or 0)*10 end
+local p=b[mv.fx][mv.fy]if p and p:sub(2,2)=="P"and(mv.ty==1 or mv.ty==8)then v=v+900 end;table.insert(sc,{idx=i,score=v})end
+table.sort(sc,function(a,b)return a.score>b.score end)local o={}for _,s in ipairs(sc)do table.insert(o,m[s.idx])end;return o end
+local function hs(b)local h=0 for x=1,8 do for y=1,8 do local p=b[x][y]if p then h=h+(x*13+y*37)*(string.byte(p))end end end;return h%1000000 end
+local function sr(b,d,al,be,mx,c)
+if d==0 then return A.E(b),nil end;local st,wn=C.GGS(b,c)
+if st=="CM"then return(mx and-100000-d or 100000+d),nil elseif st=="SM"then return 0,nil end
+local mv=C.GM(b,c)if #mv==0 then return A.E(b),nil end;local h=hs(b)+d*1000000
+local ca=A.TT[h]if ca and ca.d>=d then if mx and ca.e>=be then return ca.e,ca.m end;if not mx and ca.e<=al then return ca.e,ca.m end end
+mv=od(b,mv)local bst=mv[1]
+if mx then local be2=-1/0 for _,m in ipairs(mv)do local nb=C.AM(b,m.fx,m.fy,m.tx,m.ty)local e=sr(nb,d-1,al,be,false,c=="W"and"B"or"W")if e>be2 then be2=e;bst=m end;al=math.max(al,e)if be<=al then break end end;A.TT[h]={e=be2,d=d,m=bst};return be2,bst
+else local be2=1/0 for _,m in ipairs(mv)do local nb=C.AM(b,m.fx,m.fy,m.tx,m.ty)local e=sr(nb,d-1,al,be,true,c=="W"and"B"or"W")if e<be2 then be2=e;bst=m end;be=math.min(be,e)if be<=al then break end end;A.TT[h]={e=be2,d=d,m=bst};return be2,bst end end
+function A.BM(b,c)local mv=C.GM(b,c)if #mv==0 then return nil end;local _,bst=sr(b,A.Depth,-1/0,1/0,c=="W",c)return bst end
+local M={Board=C.N(),Turn="W",GameOver=false,Winner=nil,GameState="NM",Mode="ai",SelectedPos=nil,CastlingRights="KQkq",EnPassantTarget=nil,MoveHistory={},WhiteTime=600,BlackTime=600,TimerRunning=false,LastTick=os.clock(),BoardParts=nil}
+local S={TimeMode="C",AI_Difficulty="Ch"}local _={C=1,Ch=2,M=3}local X={Ch="M",M="C",C="Ch"}local Y={C="B",B="C"}
+function S.GT()return S.TimeMode=="B"and 60 or 600 end;function S.GD()return _[S.AI_Difficulty]or 2 end
+local ts,ph=6,3;local bo=nil
+function F()if bo then return bo end;local c=L.Character;if c then local r=c:FindFirstChild("HumanoidRootPart")or c:FindFirstChild("Torso")if r then local p=r.Position;bo=Vector3.new(p.X-4*ts,p.Y+5,p.Z+20);return bo end end;bo=Vector3.new(500,10,500);return bo end
+function GB()local a=W:FindFirstChild("ChessBoard")if a then a:Destroy()end;local a2=W:FindFirstChild("ChessPieces")if a2 then a2:Destroy()end;local o=F();local f=Instance.new("Folder")f.Name="ChessBoard";f.Parent=W
+for x=1,8 do for y=1,8 do local t=Instance.new("Part")t.Size=Vector3.new(ts,1,ts);t.Position=o+Vector3.new(x*ts,0,y*ts);t.Anchored=true;t.Name=x.."_"..y;t.Color=(x+y)%2==0 and Color3.fromRGB(240,217,181)or Color3.fromRGB(181,136,99);t.Material=Enum.Material.SmoothPlastic;t.Parent=f end end;M.BoardParts=f;M.Origin=o end
+function GO()return M.Origin or Vector3.new(0,0,0)end
+function SP()local pf=W:FindFirstChild("ChessPieces")if not pf then pf=Instance.new("Folder")pf.Name="ChessPieces";pf.Parent=W end
+local tr={}for _,p in ipairs(pf:GetChildren())do if p:IsA("Part")then local k=p:GetAttribute("X").."_"..p:GetAttribute("Y")tr[k]=p end end;local sn={};local o=GO()
+for x=1,8 do for y=1,8 do local pc=M.Board[x][y];local ke=x.."_"..y;sn[ke]=true
+if pc then local pt=tr[ke]if not pt then pt=Instance.new("Part")pt.Size=Vector3.new(ts*0.7,ph,ts*0.7);pt.Anchored=true;pt.Material=Enum.Material.SmoothPlastic
+pt:SetAttribute("X",x);pt:SetAttribute("Y",y);local bg=Instance.new("BillboardGui")bg.Size=UDim2.new(2,0,2,0);bg.StudsOffset=Vector3.new(0,ph+1,0);bg.AlwaysOnTop=true
+local lb=Instance.new("TextLabel")lb.Size=UDim2.new(1,0,1,0);lb.BackgroundTransparency=1;lb.TextScaled=true;lb.Font=Enum.Font.GothamBold;lb.Parent=bg;bg.Parent=pt;pt.Parent=pf end
+pt.Name=pc;pt.Color=D.C[pc]or Color3.fromRGB(128,128,128);pt.Position=o+Vector3.new(x*ts,ph/2,y*ts)
+local lb=pt:FindFirstChildOfClass("BillboardGui")and pt:FindFirstChildOfClass("BillboardGui"):FindFirstChildOfClass("TextLabel")
+if lb then lb.Text=D.S[pc]or "?";lb.TextColor3=D.C[pc]end end end end
+for k,p in pairs(tr)do if not sn[k]then p:Destroy()end end end
+function M:AM(fx,fy,tx,ty)
+if self.GameOver then return false end;if not M.SelectedPos then return false end
+local pc=self.Board[fx][fy]if not pc then return false end;local co=D.G(pc)
+if co~=self.Turn then return false end;if self.Mode=="ai"and co=="B"then return false end
+local vd,ex=C.VM(self.Board,fx,fy,tx,ty,self.Turn,self.EnPassantTarget)if not vd then return false end
+self.Board=C.AM(self.Board,fx,fy,tx,ty);self:UC(fx,fy,pc);self:UEP(fx,fy,tx,ty,pc)
+table.insert(self.MoveHistory,{Piece=pc,From=string.char(96+fx)..fy,To=string.char(96+tx)..ty})
+self.Turn=self.Turn=="W"and"B"or"W";local st,wn=C.GGS(self.Board,self.Turn);self.GameState=st
+if st=="CM"then self.GameOver=true;self.Winner=self.Turn=="W"and"B"or"W"elseif st=="SM"then self.GameOver=true;self.Winner="D"end
+SP();self:UU()
+if self.GameOver then self.TimerRunning=false;A.TT={};return true end
+if self.Mode=="ai"and self.Turn=="B"then self:DA()end;return true end
+function M:UEP(fx,fy,tx,ty,p)self.EnPassantTarget=nil;if p and p:sub(2,2)=="P"and math.abs(ty-fy)==2 then self.EnPassantTarget={x=fx,y=(fy+ty)/2}end end
+function M:UC(fx,fy,p)if not p then return end;local pt=p:sub(2,2)
+if pt=="K"then if D.G(p)=="W"then self.CastlingRights=self.CastlingRights:gsub("[KQ]","")else self.CastlingRights=self.CastlingRights:gsub("[kq]","")end
+elseif pt=="R"then if fx==1 and fy==1 then self.CastlingRights=self.CastlingRights:gsub("Q","")elseif fx==8 and fy==1 then self.CastlingRights=self.CastlingRights:gsub("K","")elseif fx==1 and fy==8 then self.CastlingRights=self.CastlingRights:gsub("q","")elseif fx==8 and fy==8 then self.CastlingRights=self.CastlingRights:gsub("k","")end end
+if self.CastlingRights==""then self.CastlingRights="-"end end
+function M:GVM(x,y)local p=self.Board[x][y]if not p then return{}end;local c=D.G(p)if c~=self.Turn then return{}end;local a={}for tx=1,8 do for ty=1,8 do if x~=tx or y~=ty then local s=C.VM(self.Board,x,y,tx,ty,c)if s then table.insert(a,{x=tx,y=ty})end end end end;return a end
+function M:DA()task.spawn(function()task.wait(0.3)if self.GameOver then return end;local m2=A.BM(self.Board,"B")if m2 then self.SelectedPos={x=m2.fx,y=m2.fy};self:AM(m2.fx,m2.fy,m2.tx,m2.ty);self.SelectedPos=nil end end)end
+function M:ST()self.TimerRunning=true;self.LastTick=os.clock()
+task.spawn(function()while not self.GameOver and self.TimerRunning do local nw=os.clock();local dt=nw-(self.LastTick or nw);self.LastTick=nw
+if self.Turn=="W"then self.WhiteTime=math.max(0,self.WhiteTime-dt)
+if self.WhiteTime<=0 then self.GameOver=true;self.Winner="B";self.GameState="TO";self:UU();self.TimerRunning=false;return end
+else self.BlackTime=math.max(0,self.BlackTime-dt)
+if self.BlackTime<=0 then self.GameOver=true;self.Winner="W";self.GameState="TO";self:UU();self.TimerRunning=false;return end end;self:UU()task.wait(0.5)end end)end
+local sg=Instance.new("ScreenGui")sg.Name="ChessUI";sg.ResetOnSpawn=false;sg.Parent=G;local hl={}
+local function clr()for _,h in ipairs(hl)do pcall(function()h:Destroy()end)end;hl={}end
+local function mL(pos,txt,co)local l=Instance.new("TextLabel")l.Size=UDim2.new(0,200,0,30);l.Position=pos;l.BackgroundTransparency=1;l.Text=txt;l.TextColor3=co or Color3.fromRGB(255,255,255);l.TextScaled=true;l.Font=Enum.Font.GothamBold;l.Parent=sg;return l end
+local function mB(pos,txt,co,cb)local b=Instance.new("TextButton")b.Size=UDim2.new(0,200,0,50);b.Position=pos;b.BackgroundColor3=co or Color3.fromRGB(40,40,40);b.BackgroundTransparency=0.3;b.Text=txt;b.TextColor3=Color3.fromRGB(255,255,255);b.TextScaled=true;b.Font=Enum.Font.GothamBold;local c=Instance.new("UICorner")c.CornerRadius=UDim.new(0,8);c.Parent=b;b.MouseButton1Click:Connect(cb);b.Parent=sg;return b end
+local gi=mL(UDim2.new(0.5,-100,0,10),"Chess");local ti=mL(UDim2.new(0.5,-100,0,40),"White's turn");local wt=mL(UDim2.new(0,20,0,10),"10:00");local bt=mL(UDim2.new(0,20,0,80),"10:00")
+function M:UU()ti.Text=(self.Turn=="W"and"White"or"Black").."'s turn";local wm=math.floor(self.WhiteTime/60);local ws=math.floor(self.WhiteTime%60);wt.Text=string.format("%d:%02d",wm,ws);wt.TextColor3=self.WhiteTime<60 and Color3.fromRGB(255,50,50)or Color3.fromRGB(255,255,255);local bm=math.floor(self.BlackTime/60);local bs=math.floor(self.BlackTime%60);bt.Text=string.format("%d:%02d",bm,bs);bt.TextColor3=self.BlackTime<60 and Color3.fromRGB(255,50,50)or Color3.fromRGB(255,255,255);if self.GameState=="CK"then gi.Text="Check!";gi.TextColor3=Color3.fromRGB(255,200,0)elseif self.GameState=="CM"then gi.Text="Checkmate! "..(self.Winner=="W"and"White"or"Black"or self.Winner=="D"and"Draw"or"?").." wins!";gi.TextColor3=Color3.fromRGB(255,215,0)elseif self.GameState=="SM"then gi.Text="Stalemate - Draw!";gi.TextColor3=Color3.fromRGB(200,200,200)elseif self.GameState=="TO"then gi.Text="Timeout! "..(self.Winner=="W"and"White"or"Black").." wins!";gi.TextColor3=Color3.fromRGB(255,200,0)else gi.Text="Chess";gi.TextColor3=Color3.fromRGB(255,255,255)end end
+U.InputBegan:Connect(function(input,gp)if gp then return end;if input.UserInputType==Enum.UserInputType.MouseButton1 then local mo=L:GetMouse();local ta=mo.Target;local bo=W:FindFirstChild("ChessBoard")if not ta or not bo then return end;if ta.Parent~=bo then return end;local xS,yS=ta.Name:match("(%d+)_(%d+)")if not xS or not yS then return end;local x,y=tonumber(xS),tonumber(yS);clr();if not M.SelectedPos then local p=M.Board[x][y]if p and D.G(p)==M.Turn then M.SelectedPos={x=x,y=y};local sl=Instance.new("SelectionBox")sl.Adornee=ta;sl.Color3=Color3.fromRGB(255,255,0);sl.LineThickness=0.08;sl.Transparency=0.3;sl.Parent=ta;table.insert(hl,sl);local va=M:GVM(x,y)for _,m in ipairs(va)do local mt=bo:FindFirstChild(m.x.."_"..m.y)if mt then local h2=Instance.new("SelectionBox")h2.Adornee=mt;h2.Color3=Color3.fromRGB(0,255,100);h2.LineThickness=0.05;h2.Transparency=0.5;h2.Parent=mt;table.insert(hl,h2)end end end else local fx,fy=M.SelectedPos.x,M.SelectedPos.y;M.SelectedPos=nil;M:AM(fx,fy,x,y)end end end)
+local function SG(mode)local ti=S.GT();A.Depth=S.GD();M.Board=C.N();M.Turn="W";M.GameOver=false;M.Winner=nil;M.GameState="NM";M.SelectedPos=nil;M.CastlingRights="KQkq";M.EnPassantTarget=nil;M.MoveHistory={};M.WhiteTime=ti;M.BlackTime=ti;M.TimerRunning=false;M.Mode=mode;A.TT={};clr();SP();M:UU();M:ST()end
+local tb=mB(UDim2.new(0.5,-100,0,100),"Time: Classic",Color3.fromRGB(60,60,80),function()S.TimeMode=Y[S.TimeMode];tb.Text="Time: "..(S.TimeMode=="C"and"Classic"or"Bullet")end)
+local db=mB(UDim2.new(0.5,-100,0,170),"AI: Challenging",Color3.fromRGB(80,60,40),function()S.AI_Difficulty=X[S.AI_Difficulty];db.Text="AI: "..(S.AI_Difficulty=="C"and"Classic"or S.AI_Difficulty=="Ch"and"Challenging"or"Monster")end)
+mB(UDim2.new(0.5,-100,0,240),"Play vs AI",Color3.fromRGB(40,80,40),function()SG("ai")end)
+mB(UDim2.new(0.5,-100,0,310),"2-Player Hotseat",Color3.fromRGB(40,40,80),function()SG("2p")end)
+mB(UDim2.new(0,20,0,200),"Teleport to Board",Color3.fromRGB(40,80,120),function()local ori=GO();local ch=L.Character;if ch then local ro=ch:FindFirstChild("HumanoidRootPart")or ch:FindFirstChild("Torso")if ro then ro.CFrame=CFrame.new(ori+Vector3.new(4*ts,5,-4))end end end)
+mB(UDim2.new(0,20,0,140),"Reset",Color3.fromRGB(120,40,40),function()local ti=S.GT();M.Board=C.N();M.Turn="W";M.GameOver=false;M.Winner=nil;M.GameState="NM";M.SelectedPos=nil;M.CastlingRights="KQkq";M.EnPassantTarget=nil;M.MoveHistory={};M.WhiteTime=ti;M.BlackTime=ti;M.TimerRunning=false;A.TT={};clr();SP();M:UU()end)
+GB();SP();M:UU()
+task.spawn(function()while task.wait(3)do local be=W:FindFirstChild("ChessBoard");local pe=W:FindFirstChild("ChessPieces");if not be or not pe then bo=nil;GB();SP()end end end)
