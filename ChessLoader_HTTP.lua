@@ -220,11 +220,12 @@ function GetBoardOrigin()
 		local root = char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso")
 		if root then
 			local pos = root.Position
-			boardOrigin = Vector3.new(pos.X - 4 * ts, pos.Y + 2, pos.Z + 8)
+			boardOrigin = Vector3.new(pos.X - 4 * ts, pos.Y + 5, pos.Z + 20)
 			return boardOrigin
 		end
 	end
-	boardOrigin = Vector3.new(0, 0, 0)
+	-- fallback: far away from game center to avoid conflicts
+	boardOrigin = Vector3.new(500, 10, 500)
 	return boardOrigin
 end
 
@@ -419,4 +420,18 @@ print("=== CHESS GAME LOADED ===")
 print("Click 'Play vs AI' or '2-Player Hotseat' to start")
 print("Click tiles to select and move pieces")
 print("Use 'Teleport to Board' if you can't see the board")
+
+-- Auto-repair: if game deletes our board, recreate it
+task.spawn(function()
+	while task.wait(3) do
+		local boardExists = Workspace:FindFirstChild("ChessBoard")
+		local piecesExist = Workspace:FindFirstChild("ChessPieces")
+		if not boardExists or not piecesExist then
+			print("Chess loader: board missing, regenerating...")
+			boardOrigin = nil
+			GenerateBoard()
+			SyncPieces()
+		end
+	end
+end)
 ]]
