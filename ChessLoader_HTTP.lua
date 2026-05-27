@@ -7,8 +7,13 @@
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
 local Player = Players.LocalPlayer
-local PlayerGui = Player:WaitForChild("PlayerGui")
+
+print("Chess loader: waiting for PlayerGui...")
+local PlayerGui = Player:WaitForChild("PlayerGui", 30)
+if not PlayerGui then print("ERROR: No PlayerGui found"); return end
+print("Chess loader: PlayerGui ready")
 
 --===========================================================
 -- PIECE DATA
@@ -206,24 +211,54 @@ local Game = {
 -- BOARD GENERATOR
 --===========================================================
 local ts,ph=6,3
+local boardOrigin = nil
+
+function GetBoardOrigin()
+	if boardOrigin then return boardOrigin end
+	local char = Player.Character
+	if char then
+		local root = char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso")
+		if root then
+			local pos = root.Position
+			boardOrigin = Vector3.new(pos.X - 4 * ts, pos.Y + 2, pos.Z + 8)
+			return boardOrigin
+		end
+	end
+	boardOrigin = Vector3.new(0, 0, 0)
+	return boardOrigin
+end
 
 function GenerateBoard()
-	local ex=workspace:FindFirstChild("ChessBoard")
+	print("Chess loader: generating board...")
+	local ex=Workspace:FindFirstChild("ChessBoard")
 	if ex then ex:Destroy()end
-	local f=Instance.new("Folder")f.Name="ChessBoard";f.Parent=workspace
+	local ex2=Workspace:FindFirstChild("ChessPieces")
+	if ex2 then ex2:Destroy()end
+
+	local origin = GetBoardOrigin()
+	local f=Instance.new("Folder")f.Name="ChessBoard";f.Parent=Workspace
 	for x=1,8 do for y=1,8 do
-		local t=Instance.new("Part")t.Size=Vector3.new(ts,1,ts);t.Position=Vector3.new(x*ts,0,y*ts)
-		t.Anchored=true;t.Name=x.."_"..y;t.Color=(x+y)%2==0 and Color3.fromRGB(240,217,181)or Color3.fromRGB(181,136,99)
+		local t=Instance.new("Part")t.Size=Vector3.new(ts,1,ts)
+		t.Position=origin + Vector3.new(x*ts,0,y*ts)
+		t.Anchored=true;t.Name=x.."_"..y
+		t.Color=(x+y)%2==0 and Color3.fromRGB(240,217,181)or Color3.fromRGB(181,136,99)
 		t.Material=Enum.Material.SmoothPlastic;t.Parent=f
 	end end
 	Game.BoardParts=f
+	Game.Origin=origin
+	print("Chess loader: board generated at", origin)
+end
+
+function GetOrigin()
+	return Game.Origin or Vector3.new(0,0,0)
 end
 
 function SyncPieces()
-	local pf=workspace:FindFirstChild("ChessPieces")
-	if not pf then pf=Instance.new("Folder")pf.Name="ChessPieces";pf.Parent=workspace end
+	local pf=Workspace:FindFirstChild("ChessPieces")
+	if not pf then pf=Instance.new("Folder")pf.Name="ChessPieces";pf.Parent=Workspace end
 	local tracked={}for _,p in ipairs(pf:GetChildren())do if p:IsA("Part")then local k=p:GetAttribute("X").."_"..p:GetAttribute("Y")tracked[k]=p end end
 	local seen={}
+	local origin=GetOrigin()
 	for x=1,8 do for y=1,8 do
 		local piece=Game.Board[x][y];local key=x.."_"..y;seen[key]=true
 		if piece then
@@ -234,7 +269,7 @@ function SyncPieces()
 				local lbl=Instance.new("TextLabel")lbl.Size=UDim2.new(1,0,1,0);lbl.BackgroundTransparency=1;lbl.TextScaled=true;lbl.Font=Enum.Font.GothamBold;lbl.Parent=bg;bg.Parent=part;part.Parent=pf
 			end
 			part.Name=piece;part.Color=PieceData.PieceColors[piece]or Color3.fromRGB(128,128,128)
-			part.Position=Vector3.new(x*ts,ph/2,y*ts)
+			part.Position=origin + Vector3.new(x*ts,ph/2,y*ts)
 			local lbl=part:FindFirstChildOfClass("BillboardGui")and part:FindFirstChildOfClass("BillboardGui"):FindFirstChildOfClass("TextLabel")
 			if lbl then lbl.Text=PieceData.PieceSymbols[piece]or "?";lbl.TextColor3=PieceData.PieceColors[piece]end
 		end
@@ -325,9 +360,11 @@ UserInputService.InputBegan:Connect(function(input,gp)
 	if gp then return end
 	if input.UserInputType==Enum.UserInputType.MouseButton1 then
 		local mouse=Player:GetMouse();local target=mouse.Target
-		if not target then return end
-		local board=workspace:FindFirstChild("ChessBoard")
-		if not board then return end
+		local board=Workspace:FindFirstChild("ChessBoard")
+		if not target or not board then
+			-- click on board parts only
+			return
+		end
 		if target.Parent~=board then return end
 
 		local xS,yS=target.Name:match("(%d+)_(%d+)")if not xS or not yS then return end
@@ -358,6 +395,13 @@ mkBtn(UDim2.new(0.5,-100,0,170),"2-Player Hotseat",Color3.fromRGB(40,40,80),func
 	Game.Board=ChessLogic.NewBoard();Game.Turn="White";Game.GameOver=false;Game.Winner=nil;Game.GameState="Normal";Game.SelectedPos=nil;Game.CastlingRights="KQkq";Game.EnPassantTarget=nil;Game.MoveHistory={};Game.WhiteTime=600;Game.BlackTime=600;Game.TimerRunning=false;Game.Mode="2p";AI.TT={}
 	clr();SyncPieces();Game:UpdateUI();Game:StartTimer()
 end)
+mkBtn(UDim2.new(0,20,0,200),"Teleport to Board",Color3.fromRGB(40,80,120),function()
+	local origin=GetOrigin();local char=Player.Character
+	if char then
+		local root=char:FindFirstChild("HumanoidRootPart")or char:FindFirstChild("Torso")
+		if root then root.CFrame=CFrame.new(origin + Vector3.new(4*ts,5, -4))end
+	end
+end)
 mkBtn(UDim2.new(0,20,0,140),"Reset",Color3.fromRGB(120,40,40),function()
 	Game.Board=ChessLogic.NewBoard();Game.Turn="White";Game.GameOver=false;Game.Winner=nil;Game.GameState="Normal";Game.SelectedPos=nil;Game.CastlingRights="KQkq";Game.EnPassantTarget=nil;Game.MoveHistory={};Game.WhiteTime=600;Game.BlackTime=600;Game.TimerRunning=false;AI.TT={}
 	clr();SyncPieces();Game:UpdateUI()
@@ -366,9 +410,13 @@ end)
 --===========================================================
 -- INIT
 --===========================================================
+print("Chess loader: initializing...")
 GenerateBoard()
 SyncPieces()
 Game:UpdateUI()
 
-warn("Chess loaded - click Play vs AI or 2-Player Hotseat to start")
+print("=== CHESS GAME LOADED ===")
+print("Click 'Play vs AI' or '2-Player Hotseat' to start")
+print("Click tiles to select and move pieces")
+print("Use 'Teleport to Board' if you can't see the board")
 ]]
